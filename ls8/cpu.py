@@ -25,6 +25,8 @@ RET = 0b00010001
 ST = 0b10000100
 CMP = 0b10100111
 JMP = 0b01010100
+JEQ = 0b01010101
+JNE = 0b01010110
 
 class CPU:
     """Main CPU class."""
@@ -44,6 +46,8 @@ class CPU:
         self.ops[PUSH] = self.handle_PUSH
         self.ops[POP] = self.handle_POP
         self.ops[JMP] = self.handle_JMP
+        self.ops[JEQ] = self.handle_JEQ
+        self.ops[JNE] = self.handle_JNE
         self.ops[MUL] = self.handle_MUL
         self.ops[ADD] = self.handle_ADD
         self.ops[CMP] = self.handle_CMP
@@ -145,6 +149,18 @@ class CPU:
     def handle_JMP(self, *operands):
         self.pc = self.reg[operands[0]]
 
+    def handle_JEQ(self, *operands):
+        if self.fl & EQ:
+            self.pc = self.reg[operands[0]]
+        else:
+            self.pc += 2
+
+    def handle_JNE(self, *operands):
+        if not (self.fl & EQ):
+            self.pc = self.reg[operands[0]]
+        else:
+            self.pc += 2
+
     def handle_CALL(self, *operands):
         self.reg[SP] -= 1
         self.ram_write(self.pc + 2, self.reg[SP])
@@ -171,7 +187,7 @@ class CPU:
             ir = self.ram_read(self.pc)
             op_a = self.ram_read(self.pc + 1)
             op_b = self.ram_read(self.pc + 2)
-            self.trace()
+            # self.trace()
             if ir in self.ops:
                 # self.trace()
                 self.ops[ir](op_a, op_b)
