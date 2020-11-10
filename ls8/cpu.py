@@ -6,6 +6,12 @@ SP = 0x07
 END = 0x04
 SET_IR = 0x04
 HEAD = 0xf4
+SINGLE_BYTE = 0xff
+SINGLE_BIT = 0x01
+CMP_CLEAR = 0b11111000
+EQ = 0x01
+GT = 0x02
+LT = 0x04
 
 LDI = 0b10000010
 PRN = 0b01000111
@@ -17,6 +23,7 @@ ADD = 0b10100000
 CALL = 0b01010000
 RET = 0b00010001
 ST = 0b10000100
+CMP = 0b10100111
 
 class CPU:
     """Main CPU class."""
@@ -27,6 +34,7 @@ class CPU:
         self.reg = [0] * 8
         self.reg[SP] = HEAD
         self.pc = 0
+        self.fl = 0
 
         self.ops = {}
         self.ops[LDI] = self.handle_LDI
@@ -36,6 +44,7 @@ class CPU:
         self.ops[POP] = self.handle_POP
         self.ops[MUL] = self.handle_MUL
         self.ops[ADD] = self.handle_ADD
+        self.ops[CMP] = self.handle_CMP
         self.ops[CALL] = self.handle_CALL
         self.ops[RET] = self.handle_RET
         self.ops[ST] = self.handle_ST
@@ -70,6 +79,14 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == 'MUL':
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == 'CMP':
+            self.fl &= CMP_CLEAR
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.fl |= LT
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.fl |= GT
+            else:
+                self.fl |= EQ
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -107,6 +124,9 @@ class CPU:
 
     def handle_ADD(self, *operands):
         self.alu('ADD', *operands)
+
+    def handle_CMP(self, *operands):
+        self.alu('CMP', *operands)
 
     def handle_PUSH(self, *operands):
         if (self.reg[SP]-1) >= self.reg[SET_IR]:
@@ -146,7 +166,7 @@ class CPU:
             ir = self.ram_read(self.pc)
             op_a = self.ram_read(self.pc + 1)
             op_b = self.ram_read(self.pc + 2)
-            # self.trace()
+            self.trace()
             if ir in self.ops:
                 # self.trace()
                 self.ops[ir](op_a, op_b)
