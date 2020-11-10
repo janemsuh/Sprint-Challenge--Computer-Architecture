@@ -24,6 +24,7 @@ CALL = 0b01010000
 RET = 0b00010001
 ST = 0b10000100
 CMP = 0b10100111
+JMP = 0b01010100
 
 class CPU:
     """Main CPU class."""
@@ -42,6 +43,7 @@ class CPU:
         self.ops[HLT] = self.handle_HLT
         self.ops[PUSH] = self.handle_PUSH
         self.ops[POP] = self.handle_POP
+        self.ops[JMP] = self.handle_JMP
         self.ops[MUL] = self.handle_MUL
         self.ops[ADD] = self.handle_ADD
         self.ops[CMP] = self.handle_CMP
@@ -139,6 +141,9 @@ class CPU:
         self.reg[operands[0]] = self.ram_read(self.reg[SP])
         if self.reg[SP] < HEAD:
             self.reg[SP] += 1
+
+    def handle_JMP(self, *operands):
+        self.pc = self.reg[operands[0]]
 
     def handle_CALL(self, *operands):
         self.reg[SP] -= 1
